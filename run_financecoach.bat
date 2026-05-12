@@ -1,0 +1,8 @@
+@echo off
+setlocal
+
+set "ROOT=%~dp0"
+
+python "%ROOT%app.py"
+
+endlocal

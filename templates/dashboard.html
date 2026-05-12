@@ -1,0 +1,284 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard | FinanceCoach{% endblock %}
+{% block page_id %}dashboard{% endblock %}
+{% block eyebrow %}Your money cockpit{% endblock %}
+{% block heading %}Dashboard{% endblock %}
+
+{% block content %}
+    {% if weekly_debrief %}
+        <section class="hero-panel">
+            <div>
+                <p class="eyebrow">Monday ritual</p>
+                <h3>{{ weekly_debrief.title }}</h3>
+                <p>{{ weekly_debrief.top_win }}</p>
+            </div>
+            <div class="hero-grid">
+                <div>
+                    <span>Top spending mood</span>
+                    <strong>{{ weekly_debrief.top_mood }}</strong>
+                </div>
+                <div>
+                    <span>Habit to fix</span>
+                    <strong>{{ weekly_debrief.habit_to_fix }}</strong>
+                </div>
+                <div>
+                    <span>Scheme to check</span>
+                    <strong>{{ weekly_debrief.scheme_nudge }}</strong>
+                </div>
+                <div>
+                    <span>XP earned</span>
+                    <strong>{{ weekly_debrief.xp_earned }}</strong>
+                </div>
+            </div>
+        </section>
+    {% endif %}
+
+    <section class="stats-grid">
+        <article class="stat-card">
+            <span>This month</span>
+            <strong>{{ summary.month_spent|currency_inr }}</strong>
+            <p>Across {{ summary.count }} logged expenses</p>
+        </article>
+        <article class="stat-card">
+            <span>Archetype</span>
+            <strong>{{ archetype or "Building..." }}</strong>
+            <p>Unlocked after five expenses</p>
+        </article>
+        <article class="stat-card">
+            <span>Top category</span>
+            <strong>{{ summary.top_category or "Not enough data" }}</strong>
+            <p>Where most of your money is flowing</p>
+        </article>
+        <article class="stat-card">
+            <span>Highest-risk mood</span>
+            <strong>{{ mood_insights.primary_trigger.mood if mood_insights.primary_trigger else "Stable" }}</strong>
+            <p>{{ mood_insights.primary_trigger.delta_pct ~ "% over normal" if mood_insights.primary_trigger else "No spike detected yet" }}</p>
+        </article>
+    </section>
+
+    <section class="content-grid two-col">
+        <article class="panel card-span-2">
+            <div class="panel-header">
+                <div>
+                    <p class="eyebrow">Future Self Visualizer</p>
+                    <h3>Small monthly moves, visible future payoff</h3>
+                </div>
+                <div class="projection-pill">{{ projection.monthly_extra|currency_inr }}/month</div>
+            </div>
+            <div class="projection-layout">
+                <div class="projection-math">
+                    <strong>If you save {{ projection.monthly_extra|currency_inr }} more each month, in {{ projection.years }} years you could build {{ projection.projected_total|currency_inr }} extra.</strong>
+                    <p>{{ projection.loss_frame }}</p>
+                </div>
+                <div class="projection-callout">
+                    <span>Behavior framing</span>
+                    <p>Anchor this amount to one recurring pattern, not to perfection. Consistency compounds better than motivation.</p>
+                </div>
+            </div>
+        </article>
+
+        <article class="panel">
+            <div class="panel-header">
+                <div>
+                    <p class="eyebrow">Spending mood signal</p>
+                    <h3>Trigger warning</h3>
+                </div>
+            </div>
+            {% if mood_insights.primary_trigger %}
+                <div class="insight-alert">
+                    <strong>{{ mood_insights.primary_trigger.mood }}</strong>
+                    <p>{{ mood_insights.primary_trigger.message }}</p>
+                </div>
+            {% else %}
+                <p class="muted-copy">Log a few more mood-tagged expenses and I'll start flagging the patterns that lift your spending.</p>
+            {% endif %}
+        </article>
+
+        <article class="panel">
+            <div class="panel-header">
+                <div>
+                    <p class="eyebrow">Financial archetype</p>
+                    <h3>{{ archetype or "Still learning" }}</h3>
+                </div>
+            </div>
+            {% if archetype_tips %}
+                <ul class="compact-list">
+                    {% for tip in archetype_tips %}
+                        <li>{{ tip }}</li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p class="muted-copy">Your archetype unlocks after five expenses. Keep logging with mood tags.</p>
+            {% endif %}
+        </article>
+    </section>
+
+    <section class="content-grid two-col">
+        <article class="panel">
+            <div class="panel-header">
+                <div>
+                    <p class="eyebrow">Impulse Forecast</p>
+                    <h3>{{ behavioral_signals.risk_score }}/100 risk</h3>
+                </div>
+                <div class="risk-pill risk-{{ behavioral_signals.risk_band|lower }}">{{ behavioral_signals.risk_band }}</div>
+            </div>
+            <p>{{ behavioral_signals.headline }}</p>
+            <div class="progress-track">
+                <div class="progress-fill" style="width: {{ behavioral_signals.risk_score }}%;"></div>
+            </div>
+            <p class="muted-copy">This score blends your mood-trigger intensity, discretionary mix, recent drift, and archetype pattern.</p>
+        </article>
+
+        <article class="panel">
+            <div class="panel-header">
+                <div>
+                    <p class="eyebrow">Silent Leak Detector</p>
+                    <h3>{{ behavioral_signals.leak_detector.category if behavioral_signals.leak_detector else "No big leak yet" }}</h3>
+                </div>
+            </div>
+            {% if behavioral_signals.leak_detector %}
+                <div class="insight-alert soft">
+                    <strong>{{ behavioral_signals.leak_detector.count }} repeat spends</strong>
+                    <p>{{ behavioral_signals.leak_detector.message }}</p>
+                </div>
+            {% else %}
+                <p class="muted-copy">No repeated small-spend leak is standing out yet. That's a good sign.</p>
+            {% endif %}
+        </article>
+    </section>
+
+    <section class="content-grid two-col">
+        <article class="panel">
+            <div class="panel-header">
+                <div>
+                    <p class="eyebrow">Spend Swap Lab</p>
+                    <h3>Turn one monthly cut into future wealth</h3>
+                </div>
+            </div>
+            <div class="swap-lab" id="swapLab" data-default-years="{{ swap_lab.default_years }}">
+                <label>
+                    <span>Focus category</span>
+                    <select id="swapCategory">
+                        {% for option in swap_lab.choices %}
+                            <option value="{{ option.category }}" data-cut="{{ option.suggested_cut }}">{{ option.category }} - {{ option.monthly_spend|currency_inr }}/month</option>
+                        {% endfor %}
+                    </select>
+                </label>
+                <label>
+                    <span>Monthly cut</span>
+                    <input type="number" id="swapAmount" min="100" step="100" value="{{ swap_lab.default_amount }}">
+                </label>
+                <label>
+                    <span>Years</span>
+                    <input type="range" id="swapYears" min="1" max="15" value="{{ swap_lab.default_years }}">
+                </label>
+                <div class="swap-output">
+                    <strong id="swapProjection"></strong>
+                    <p id="swapNarrative" class="muted-copy"></p>
+                </div>
+            </div>
+        </article>
+
+        <article class="panel">
+            <div class="panel-header">
+                <div>
+                    <p class="eyebrow">Adaptive Challenge</p>
+                    <h3>{{ behavioral_signals.challenge.title }}</h3>
+                </div>
+            </div>
+            <p>{{ behavioral_signals.challenge.description }}</p>
+            <a href="{{ url_for('coach') }}" class="text-link">Open AI Coach to build on this</a>
+        </article>
+    </section>
+
+    <section class="content-grid two-col">
+        <article class="panel">
+            <div class="panel-header">
+                <div>
+                    <p class="eyebrow">Category flow</p>
+                    <h3>Where the month went</h3>
+                </div>
+            </div>
+            <canvas id="categoryChart" height="240"></canvas>
+        </article>
+
+        <article class="panel">
+            <div class="panel-header">
+                <div>
+                    <p class="eyebrow">Seven-day pulse</p>
+                    <h3>Recent spending rhythm</h3>
+                </div>
+            </div>
+            <canvas id="dailyChart" height="240"></canvas>
+        </article>
+    </section>
+
+    <section class="content-grid two-col">
+        <article class="panel">
+            <div class="panel-header">
+                <div>
+                    <p class="eyebrow">Latest expenses</p>
+                    <h3>Recent activity</h3>
+                </div>
+                <a href="{{ url_for('expenses_page') }}" class="text-link">View all</a>
+            </div>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Category</th>
+                            <th>Mood</th>
+                            <th>Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in recent_expenses %}
+                            <tr>
+                                <td>{{ item.spent_on }}</td>
+                                <td>{{ item.category }}</td>
+                                <td><span class="mood-pill">{{ item.mood }}</span></td>
+                                <td>{{ item.amount|currency_inr }}</td>
+                            </tr>
+                        {% else %}
+                            <tr>
+                                <td colspan="4" class="empty-state">No expenses logged yet.</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </article>
+
+        <article class="panel">
+            <div class="panel-header">
+                <div>
+                    <p class="eyebrow">Scheme shortlist</p>
+                    <h3>Government support routes</h3>
+                </div>
+                <a href="{{ url_for('schemes') }}" class="text-link">Update quiz</a>
+            </div>
+            <div class="stack-list">
+                {% for scheme in scheme_matches[:3] %}
+                    <div class="stack-card">
+                        <div>
+                            <strong>{{ scheme.name }}</strong>
+                            <p>{{ scheme.reason }}</p>
+                        </div>
+                        <a href="{{ scheme.apply_url }}" target="_blank" rel="noreferrer">Open</a>
+                    </div>
+                {% else %}
+                    <p class="muted-copy">Complete the scheme matcher quiz to surface official programs that fit your profile.</p>
+                {% endfor %}
+            </div>
+        </article>
+    </section>
+{% endblock %}
+
+{% block scripts %}
+    <script>
+        window.financeCoachCharts = {{ chart_data|tojson }};
+        window.financeCoachSwapLab = {{ swap_lab|tojson }};
+    </script>
+{% endblock %}

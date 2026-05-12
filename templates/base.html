@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ app_name }}{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body data-page="{% block page_id %}app{% endblock %}">
+    <div class="app-shell">
+        <aside class="sidebar">
+            <div class="brand">
+                <div class="brand-mark">FC</div>
+                <div>
+                    <p class="eyebrow">Personal Finance Coach</p>
+                    <h1>FinanceCoach</h1>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <a href="{{ url_for('dashboard') }}" class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}">
+                    <span>Dashboard</span>
+                </a>
+                <a href="{{ url_for('expenses_page') }}" class="nav-link {% if request.endpoint == 'expenses_page' %}active{% endif %}">
+                    <span>Expenses</span>
+                </a>
+                <a href="{{ url_for('coach') }}" class="nav-link {% if request.endpoint == 'coach' %}active{% endif %}">
+                    <span>AI Coach</span>
+                </a>
+                <a href="{{ url_for('schemes') }}" class="nav-link {% if request.endpoint == 'schemes' %}active{% endif %}">
+                    <span>Govt Schemes</span>
+                </a>
+                <a href="{{ url_for('profile') }}" class="nav-link {% if request.endpoint == 'profile' %}active{% endif %}">
+                    <span>Profile</span>
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="xp-badge">
+                    <span class="xp-badge-label">XP</span>
+                    <strong>{{ g.user['xp'] }}</strong>
+                </div>
+                {% if current_level %}
+                    <p class="sidebar-level">{{ current_level.current.name }}</p>
+                {% endif %}
+                <a href="{{ url_for('logout') }}" class="logout-link">Log out</a>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="topbar">
+                <div>
+                    <p class="eyebrow">{% block eyebrow %}Financial command center{% endblock %}</p>
+                    <h2>{% block heading %}{{ app_name }}{% endblock %}</h2>
+                </div>
+                <div class="topbar-right">
+                    {% if current_level %}
+                        <div class="level-pill">
+                            <span>{{ current_level.current.name }}</span>
+                            <strong>{{ g.user['xp'] }} XP</strong>
+                        </div>
+                    {% endif %}
+                    <div class="user-pill">
+                        <strong>{{ g.user['full_name'] }}</strong>
+                        <span>{{ g.user['email'] }}</span>
+                    </div>
+                </div>
+            </header>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <section class="flash-stack">
+                        {% for category, message in messages %}
+                            <div class="flash flash-{{ category }}">{{ message }}</div>
+                        {% endfor %}
+                    </section>
+                {% endif %}
+            {% endwith %}
+
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

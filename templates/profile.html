@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+
+{% block title %}Profile | FinanceCoach{% endblock %}
+{% block page_id %}profile{% endblock %}
+{% block eyebrow %}Identity, progress, and rewards{% endblock %}
+{% block heading %}Profile{% endblock %}
+
+{% block content %}
+    <section class="content-grid profile-layout">
+        <article class="panel">
+            <div class="panel-header">
+                <div>
+                    <p class="eyebrow">Level progression</p>
+                    <h3>{{ level.current.name }}</h3>
+                </div>
+                <div class="projection-pill">{{ g.user['xp'] }} XP</div>
+            </div>
+            <div class="progress-block">
+                <div class="progress-track">
+                    <div class="progress-fill" style="width: {{ level.progress }}%;"></div>
+                </div>
+                <div class="progress-meta">
+                    <span>{{ level.current.min_xp }} XP</span>
+                    <span>{{ level.next.min_xp if level.next else g.user['xp'] }} XP</span>
+                </div>
+            </div>
+            <p class="muted-copy">
+                {% if level.next %}
+                    {{ level.next.name }} unlocks at {{ level.next.min_xp }} XP.
+                {% else %}
+                    You are at the highest FinanceCoach level right now.
+                {% endif %}
+            </p>
+        </article>
+
+        <article class="panel">
+            <div class="panel-header">
+                <div>
+                    <p class="eyebrow">Spending personality</p>
+                    <h3>{{ archetype or "Still calibrating" }}</h3>
+                </div>
+            </div>
+            {% if archetype_tips %}
+                <ul class="compact-list">
+                    {% for tip in archetype_tips %}
+                        <li>{{ tip }}</li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p class="muted-copy">Five logged expenses are enough to classify your first archetype.</p>
+            {% endif %}
+        </article>
+    </section>
+
+    <section class="content-grid two-col">
+        <article class="panel">
+            <div class="panel-header">
+                <div>
+                    <p class="eyebrow">Recent XP</p>
+                    <h3>How you are earning progress</h3>
+                </div>
+            </div>
+            <div class="stack-list">
+                {% for event in xp_events %}
+                    <div class="stack-card">
+                        <div>
+                            <strong>+{{ event.amount }} XP</strong>
+                            <p>{{ event.reason }}</p>
+                        </div>
+                        <span>{{ event.created_at[:10] }}</span>
+                    </div>
+                {% else %}
+                    <p class="muted-copy">Your XP history will appear once you start using the app.</p>
+                {% endfor %}
+            </div>
+        </article>
+
+        <article class="panel">
+            <div class="panel-header">
+                <div>
+                    <p class="eyebrow">Impulse Forecast</p>
+                    <h3>{{ behavioral_signals.risk_score }}/100 - {{ behavioral_signals.risk_band }}</h3>
+                </div>
+            </div>
+            <p>{{ behavioral_signals.headline }}</p>
+            <div class="progress-track">
+                <div class="progress-fill" style="width: {{ behavioral_signals.risk_score }}%;"></div>
+            </div>
+            <p class="muted-copy">{{ behavioral_signals.challenge.title }}: {{ behavioral_signals.challenge.description }}</p>
+        </article>
+    </section>
+
+    <section class="content-grid two-col">
+        <article class="panel">
+            <div class="panel-header">
+                <div>
+                    <p class="eyebrow">Pattern snapshot</p>
+                    <h3>Your current money fingerprint</h3>
+                </div>
+            </div>
+            <div class="context-grid">
+                <div class="subpanel">
+                    <span class="mini-label">Expenses logged</span>
+                    <strong>{{ summary.count }}</strong>
+                </div>
+                <div class="subpanel">
+                    <span class="mini-label">Total tracked spend</span>
+                    <strong>{{ summary.total_spent|currency_inr }}</strong>
+                </div>
+                <div class="subpanel">
+                    <span class="mini-label">Top category</span>
+                    <strong>{{ summary.top_category or "Not enough data" }}</strong>
+                </div>
+                <div class="subpanel">
+                    <span class="mini-label">Top mood signal</span>
+                    <strong>{{ mood_insights.primary_trigger.mood if mood_insights.primary_trigger else "Stable" }}</strong>
+                </div>
+            </div>
+        </article>
+
+        <article class="panel">
+            <div class="panel-header">
+                <div>
+                    <p class="eyebrow">Silent Leak Detector</p>
+                    <h3>{{ behavioral_signals.leak_detector.category if behavioral_signals.leak_detector else "No big leak yet" }}</h3>
+                </div>
+            </div>
+            {% if behavioral_signals.leak_detector %}
+                <p>{{ behavioral_signals.leak_detector.message }}</p>
+            {% else %}
+                <p class="muted-copy">No category is leaking through repeated small spends right now.</p>
+            {% endif %}
+        </article>
+    </section>
+
+    <section class="panel">
+        <div class="panel-header">
+            <div>
+                <p class="eyebrow">Scheme memory</p>
+                <h3>Your latest government scheme shortlist</h3>
+            </div>
+        </div>
+        <div class="stack-list">
+            {% for scheme in scheme_matches[:4] %}
+                <div class="stack-card">
+                    <div>
+                        <strong>{{ scheme.name }}</strong>
+                        <p>{{ scheme.reason }}</p>
+                    </div>
+                    <a href="{{ scheme.apply_url }}" target="_blank" rel="noreferrer">Open</a>
+                </div>
+            {% else %}
+                <p class="muted-copy">No scheme history yet. Complete the matcher quiz to save your shortlist here.</p>
+            {% endfor %}
+        </div>
+    </section>
+{% endblock %}

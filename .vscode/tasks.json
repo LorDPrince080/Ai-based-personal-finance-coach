@@ -1,0 +1,32 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Start FinanceCoach",
+      "type": "shell",
+      "command": "python",
+      "args": [
+        "app.py"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}",
+        "env": {}
+      },
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "Run FinanceCoach Smoke Test",
+      "type": "shell",
+      "command": "python",
+      "args": [
+        "smoke_test.py"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}",
+        "env": {}
+      },
+      "problemMatcher": []
+    }
+  ]
+}

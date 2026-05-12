@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+
+{% block title %}Expenses | FinanceCoach{% endblock %}
+{% block page_id %}expenses{% endblock %}
+{% block eyebrow %}Mood-aware logging{% endblock %}
+{% block heading %}Expenses{% endblock %}
+
+{% block content %}
+    <section class="content-grid expenses-layout">
+        <article class="panel">
+            <div class="panel-header">
+                <div>
+                    <p class="eyebrow">Add expense</p>
+                    <h3>Capture the money and the mood</h3>
+                </div>
+            </div>
+            <form method="post" action="{{ url_for('add_expense') }}" class="form-grid" id="expenseForm">
+                <label>
+                    <span>Amount</span>
+                    <input type="number" step="0.01" min="1" name="amount" placeholder="1250" required>
+                </label>
+                <label>
+                    <span>Date</span>
+                    <input type="date" name="spent_on" value="{{ today_iso }}" required>
+                </label>
+                <label>
+                    <span>Category</span>
+                    <select name="category" required>
+                        <option value="">Choose</option>
+                        {% for category in categories %}
+                            <option value="{{ category }}">{{ category }}</option>
+                        {% endfor %}
+                    </select>
+                </label>
+                <label>
+                    <span>Spending mood</span>
+                    <select name="mood" id="expenseMood" required>
+                        <option value="">Choose</option>
+                        {% for mood in moods %}
+                            <option value="{{ mood }}">{{ mood }}</option>
+                        {% endfor %}
+                    </select>
+                </label>
+                <label class="field-span-2">
+                    <span>Note</span>
+                    <textarea name="note" rows="4" placeholder="Why did this expense happen?"></textarea>
+                </label>
+                <button type="submit" class="primary-btn field-span-2">Log expense and earn XP</button>
+            </form>
+        </article>
+
+        <article class="panel">
+            <div class="panel-header">
+                <div>
+                    <p class="eyebrow">Live pattern guardrail</p>
+                    <h3>Before the next trigger moment</h3>
+                </div>
+            </div>
+            <div id="moodWarningBox" class="insight-alert soft hidden">
+                <strong id="moodWarningTitle"></strong>
+                <p id="moodWarningMessage"></p>
+            </div>
+            {% if mood_insights.primary_trigger %}
+                <div class="insight-alert">
+                    <strong>{{ mood_insights.primary_trigger.mood }} looks expensive for you.</strong>
+                    <p>{{ mood_insights.primary_trigger.message }}</p>
+                </div>
+            {% endif %}
+            <div class="subpanel">
+                <span class="mini-label">Current archetype</span>
+                <strong>{{ archetype or "Learning from your first five expenses" }}</strong>
+            </div>
+            <div class="subpanel">
+                <span class="mini-label">Known mood warnings</span>
+                {% if mood_insights.warnings %}
+                    <ul class="compact-list">
+                        {% for warning in mood_insights.warnings %}
+                            <li>{{ warning.mood }}: {{ warning.delta_pct }}% above your baseline spend</li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="muted-copy">No strong warning pattern yet. More logs make the model sharper.</p>
+                {% endif %}
+            </div>
+        </article>
+    </section>
+
+    <section class="panel">
+        <div class="panel-header">
+            <div>
+                <p class="eyebrow">Expense ledger</p>
+                <h3>Recent mood-tagged spending</h3>
+            </div>
+        </div>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Category</th>
+                        <th>Mood</th>
+                        <th>Note</th>
+                        <th>Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in expenses %}
+                        <tr>
+                            <td>{{ item.spent_on }}</td>
+                            <td>{{ item.category }}</td>
+                            <td><span class="mood-pill">{{ item.mood }}</span></td>
+                            <td>{{ item.note or "—" }}</td>
+                            <td>{{ item.amount|currency_inr }}</td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="5" class="empty-state">No expenses yet. The first one starts your coaching data trail.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+{% endblock %}

@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ "Login" if auth_mode == "login" else "Register" }} | FinanceCoach</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="auth-body">
+    <main class="auth-shell">
+        <section class="auth-hero">
+            <p class="eyebrow">AI personal finance system</p>
+            <h1>Turn every expense into coaching, clarity, and momentum.</h1>
+            <p class="hero-copy">
+                FinanceCoach blends mood-aware expense tracking, a living spending archetype,
+                government scheme matching, and a Gemini-powered coach that actually knows your money story.
+            </p>
+
+            <div class="feature-grid">
+                <article class="feature-chip">
+                    <strong>Spending Mood Tracker</strong>
+                    <span>Catch emotional triggers before they become overspending loops.</span>
+                </article>
+                <article class="feature-chip">
+                    <strong>Future Self Visualizer</strong>
+                    <span>Translate small monthly savings into a concrete future payoff.</span>
+                </article>
+                <article class="feature-chip">
+                    <strong>Weekly AI Debrief</strong>
+                    <span>Monday summaries with one habit fix, one win, and one scheme to explore.</span>
+                </article>
+            </div>
+        </section>
+
+        <section class="auth-card-wrap">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <section class="flash-stack auth-flash">
+                        {% for category, message in messages %}
+                            <div class="flash flash-{{ category }}">{{ message }}</div>
+                        {% endfor %}
+                    </section>
+                {% endif %}
+            {% endwith %}
+
+            <div class="auth-card">
+                <p class="eyebrow">{{ "Welcome back" if auth_mode == "login" else "Create your account" }}</p>
+                <h2>{{ "Log in to FinanceCoach" if auth_mode == "login" else "Start your money reset" }}</h2>
+
+                <form method="post" class="auth-form">
+                    {% if auth_mode == "register" %}
+                        <label>
+                            <span>Full name</span>
+                            <input type="text" name="full_name" placeholder="Aarav Sharma" required>
+                        </label>
+                    {% endif %}
+
+                    <label>
+                        <span>Email</span>
+                        <input type="email" name="email" placeholder="you@example.com" required>
+                    </label>
+
+                    <label>
+                        <span>Password</span>
+                        <input type="password" name="password" placeholder="Minimum 8 characters" required>
+                    </label>
+
+                    <button type="submit" class="primary-btn">
+                        {{ "Log in" if auth_mode == "login" else "Create account" }}
+                    </button>
+                </form>
+
+                <p class="auth-switch">
+                    {% if auth_mode == "login" %}
+                        Need an account? <a href="{{ url_for('register') }}">Register</a>
+                    {% else %}
+                        Already have an account? <a href="{{ url_for('login') }}">Log in</a>
+                    {% endif %}
+                </p>
+            </div>
+        </section>
+    </main>
+</body>
+</html>

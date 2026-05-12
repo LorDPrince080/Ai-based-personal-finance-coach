@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+
+{% block title %}AI Coach | FinanceCoach{% endblock %}
+{% block page_id %}coach{% endblock %}
+{% block eyebrow %}Gemini-powered coaching{% endblock %}
+{% block heading %}AI Coach{% endblock %}
+
+{% block content %}
+    <section class="content-grid coach-layout">
+        <article class="panel coach-context">
+            <div class="panel-header">
+                <div>
+                    <p class="eyebrow">Live coaching context</p>
+                    <h3>What your coach knows</h3>
+                </div>
+            </div>
+            <div class="context-grid">
+                <div class="subpanel">
+                    <span class="mini-label">Archetype</span>
+                    <strong>{{ coach_snapshot.archetype }}</strong>
+                </div>
+                <div class="subpanel">
+                    <span class="mini-label">Top category</span>
+                    <strong>{{ summary.top_category or "Not enough data" }}</strong>
+                </div>
+                <div class="subpanel">
+                    <span class="mini-label">Impulse risk</span>
+                    <strong>{{ coach_snapshot.risk_score }}/100 - {{ coach_snapshot.risk_band }}</strong>
+                </div>
+                <div class="subpanel">
+                    <span class="mini-label">Scheme lead</span>
+                    <strong>{{ coach_snapshot.scheme_nudge }}</strong>
+                </div>
+            </div>
+
+            <div class="subpanel">
+                <span class="mini-label">Coach diagnosis</span>
+                <strong>{{ coach_snapshot.headline }}</strong>
+                <p>{{ coach_snapshot.diagnosis }}</p>
+            </div>
+
+            {% if behavioral_signals.leak_detector %}
+                <div class="subpanel">
+                    <span class="mini-label">Quiet leak</span>
+                    <strong>{{ behavioral_signals.leak_detector.category }}</strong>
+                    <p>{{ behavioral_signals.leak_detector.message }}</p>
+                </div>
+            {% endif %}
+
+            <form method="post" action="{{ url_for('coach_advice_complete') }}">
+                <button type="submit" class="secondary-btn full-width">I followed the latest advice</button>
+            </form>
+        </article>
+
+        <article class="panel chat-panel">
+            <div class="panel-header">
+                <div>
+                    <p class="eyebrow">Conversation</p>
+                    <h3>Hyper-personalized finance help</h3>
+                </div>
+            </div>
+
+            <div class="quick-question-row">
+                {% for question in quick_questions %}
+                    <button type="button" class="quick-question-btn" data-question="{{ question }}">{{ question }}</button>
+                {% endfor %}
+            </div>
+
+            <div class="chat-thread" id="chatThread">
+                {% for item in messages %}
+                    <article class="chat-bubble {{ 'assistant' if item.role == 'assistant' else 'user' }}">
+                        <span class="chat-role">{{ "FinanceCoach AI" if item.role == 'assistant' else 'You' }}</span>
+                        <p>{{ item.message|nl2br }}</p>
+                    </article>
+                {% else %}
+                    <article class="chat-bubble assistant">
+                        <span class="chat-role">FinanceCoach AI</span>
+                        <p>Ask me about your spending, saving goals, mood triggers, quiet leaks, or scheme matches. I'll use your actual money patterns, not canned advice.</p>
+                    </article>
+                {% endfor %}
+            </div>
+
+            <form id="chatForm" class="chat-form">
+                <textarea id="chatInput" rows="3" placeholder="Ask about your money patterns..." required></textarea>
+                <button type="submit" class="primary-btn">Send to coach</button>
+            </form>
+        </article>
+    </section>
+
+    <section class="content-grid two-col">
+        <article class="panel">
+            <div class="panel-header">
+                <div>
+                    <p class="eyebrow">Mood Rescue Playbooks</p>
+                    <h3>What to do before the spend happens</h3>
+                </div>
+            </div>
+            <div class="stack-list">
+                {% for playbook in behavioral_signals.rescue_playbooks %}
+                    <div class="stack-card vertical-card">
+                        <div>
+                            <strong>{{ playbook.mood }} - {{ playbook.title }}</strong>
+                            {% if playbook.warning %}
+                                <p>{{ playbook.warning }}</p>
+                            {% endif %}
+                            <ul class="compact-list">
+                                {% for step in playbook.steps %}
+                                    <li>{{ step }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                {% else %}
+                    <p class="muted-copy">Once stronger mood patterns appear, your rescue playbooks will show up here.</p>
+                {% endfor %}
+            </div>
+        </article>
+
+        <article class="panel">
+            <div class="panel-header">
+                <div>
+                    <p class="eyebrow">Adaptive Challenge</p>
+                    <h3>{{ behavioral_signals.challenge.title }}</h3>
+                </div>
+            </div>
+            <p>{{ behavioral_signals.challenge.description }}</p>
+            <div class="subpanel">
+                <span class="mini-label">Next move the coach sees</span>
+                <strong>{{ coach_snapshot.next_move }}</strong>
+            </div>
+        </article>
+    </section>
+{% endblock %}
